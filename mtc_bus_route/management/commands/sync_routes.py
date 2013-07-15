@@ -1,4 +1,8 @@
 """
+This management command script adds and syncs the routes, bus stops parsed
+from the html table.
+
+usage: ./manage.py sync_routes
 """
 import os
 import threading
@@ -39,7 +43,7 @@ class Command(BaseCommand):
         else:
             t = threading.Thread(target=self.parse_sync_routes, args=(fh,))
             t.start()
-            self.print_log("Started syncing..")
+            self.print_log("Started syncing.. This may take several minutes.")
             self.print_progress(t)
         return
 
@@ -84,7 +88,7 @@ class Command(BaseCommand):
                             self.print_log("Detected a new bus type code '%s'." % (bus_type_code))
 
                     if col_num == 1:  # Starting bus stop
-                        if each_col.text:
+                        if each_col.text.strip():
                             start_stop = self.save_update_bus_stop(stop_name=each_col.text.strip(),
                                                                    anchor=each_col.a)
                             if start_stop:
@@ -94,7 +98,7 @@ class Command(BaseCommand):
                             break
 
                     if col_num == 2:  # Ending bus stop
-                        if each_col.text:
+                        if each_col.text.strip():
                             end_stop = self.save_update_bus_stop(stop_name=each_col.text.strip(),
                                                                  anchor=each_col.a)
                             if end_stop:
@@ -104,15 +108,18 @@ class Command(BaseCommand):
                             break
 
                     if col_num == 3:  # via route
-                        if each_col.text:
+                        if each_col.text.strip():
                             route.save()
                             path_list = [x.strip() for x in each_col.text.split(',')]
                             path_anchor = zip(path_list, each_col.find_all("a"))
                             if not path_anchor:
                                 path_anchor = zip(path_list, [])
                             for order, each_stop in enumerate(path_anchor):
-                                via_stop = self.save_update_bus_stop(stop_name=each_stop[0],
-                                                                     anchor=each_stop[1])
+                                if each_stop[0]:
+                                    via_stop = self.save_update_bus_stop(stop_name=each_stop[0],
+                                                                         anchor=each_stop[1])
+                                else:
+                                    continue
                                 if via_stop:
                                     try:
                                         path_stop = BusRoutePath.objects.get(route=route,
@@ -132,19 +139,19 @@ class Command(BaseCommand):
                             continue
 
                     if col_num == 4:  # High frequency
-                        if each_col.text == 'x':
+                        if each_col.text.strip() == 'x':
                             route.is_high_frequency = True
                         else:
                             route.is_high_frequency = False
 
                     if col_num == 5:  # Night service
-                        if each_col.text == 'x':
+                        if each_col.text.strip() == 'x':
                             route.is_night_service = True
                         else:
                             route.is_night_service = False
 
                     if col_num == 6:  # Low frequency
-                        if each_col.text == 'x':
+                        if each_col.text.strip() == 'x':
                             route.is_low_frequency = True
                         else:
                             route.is_low_frequency = False
