@@ -1,7 +1,10 @@
-mtc-bus-route-parser-django [Under DEV]
-===========================
+## MTC (Chennai) bus route parser and sync [Under DEV]
 
-This django application is to parse MTC bus routes from a html and store them in database
+This django application is to parse MTC bus routes from a html and store them in database.
+
+### Usage
+
+`./manage.py sync_routes`
 
 ### Licence
 
