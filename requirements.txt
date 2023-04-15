@@ -1,3 +1,3 @@
-django==1.5.1
+django==2.2.28
 south
 beautifulsoup4==4.2.1
